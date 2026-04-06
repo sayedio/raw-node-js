@@ -167,9 +167,11 @@ tokenHandler._token.delete = (requestedProperties, callback) => {
 };
 
 tokenHandler._token.verifyToken = (tokenId, phone, callback) => {
+  // console.log(tokenId);
   data.read('token', tokenId, (err, data) => {
     if (!err && data) {
       const parsedData = parseJson(data);
+
       if (parsedData.phone === phone && parsedData.expiresAt > Date.now()) {
         callback(true);
       } else {

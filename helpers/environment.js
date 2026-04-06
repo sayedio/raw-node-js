@@ -3,12 +3,14 @@ const environment = {};
 environment.staging = {
   port: 3000,
   envName: 'staging',
-  authSecret: 'assdadsadasdadsd'
+  authSecret: 'assdadsadasdadsd',
+  maxChecks: 5
 };
 environment.production = {
   port: 3000,
   envName: 'production',
-  authSecret: 'asdalkfnksjdgfkaj'
+  authSecret: 'asdalkfnksjdgfkaj',
+  maxChecks: 5
 };
 
 const environmentKey =
