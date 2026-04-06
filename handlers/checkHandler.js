@@ -194,7 +194,106 @@ checkHandler._check.post = (requestedProperties, callback) => {
     });
   }
 };
-checkHandler._check.put = (requestedProperties, callback) => {};
+checkHandler._check.put = (requestedProperties, callback) => {
+  const body = requestedProperties.body;
+
+  const protocol =
+    typeof body.protocol === 'string' &&
+    ['http', 'https'].indexOf(body.protocol) > -1
+      ? body.protocol
+      : false;
+
+  const url =
+    typeof body.url === 'string' && body.url.trim().length > 0
+      ? body.url.trim()
+      : false;
+
+  const method =
+    typeof body.method === 'string' &&
+    ['get', 'put', 'post', 'delete'].indexOf(body.method) > -1
+      ? body.method
+      : false;
+  const successCodes =
+    typeof body.successCodes === 'object' && body.successCodes instanceof Array
+      ? body.successCodes
+      : false;
+
+  const timeoutSeconds =
+    typeof body.timeoutSeconds === 'number' &&
+    body.timeoutSeconds % 1 === 0 &&
+    body.timeoutSeconds >= 1 &&
+    body.timeoutSeconds <= 5
+      ? body.timeoutSeconds
+      : false;
+
+  const id =
+    typeof body.id === 'string' && body.id.trim().length > 0
+      ? body.id.trim()
+      : false;
+  if (id) {
+    if (url || method || protocol || successCodes || timeoutSeconds) {
+      data.read('checks', id, (err1, checksData) => {
+        if (!err1 && checksData) {
+          const parsedChecksData = parseJson(checksData);
+          let token =
+            typeof requestedProperties.headers?.token === 'string'
+              ? requestedProperties.headers.token
+              : false;
+          if (token) {
+            verifyToken(token, parsedChecksData.userPhone, (isTokenOk) => {
+              if (isTokenOk) {
+                if (url) {
+                  parsedChecksData.url = url;
+                }
+                if (method) {
+                  parsedChecksData.method = method;
+                }
+                if (protocol) {
+                  parsedChecksData.protocol = protocol;
+                }
+                if (successCodes) {
+                  parsedChecksData.successCodes = successCodes;
+                }
+                if (timeoutSeconds) {
+                  parsedChecksData.timeoutSeconds = timeoutSeconds;
+                }
+                data.update('checks', id, parsedChecksData, (err2) => {
+                  if (!err2) {
+                    callback(200, parsedChecksData);
+                  } else {
+                    callback(500, {
+                      error: 'there is a server error while editing checks'
+                    });
+                  }
+                });
+              } else {
+                callback(401, {
+                  error: 'token is not correct, unauthorized access'
+                });
+              }
+            });
+          } else {
+            callback(401, {
+              error: 'must provide token'
+            });
+          }
+        } else {
+          callback(400, {
+            error: 'checks id is not correct'
+          });
+        }
+      });
+    } else {
+      callback(400, {
+        error: 'you must provide at least one property to edit'
+      });
+    }
+  } else {
+    callback(400, {
+      error: 'There is a problem with your request'
+    });
+  }
+};
 checkHandler._check.delete = (requestedProperties, callback) => {};
 
 module.exports = checkHandler;
