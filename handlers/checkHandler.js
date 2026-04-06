@@ -294,6 +294,91 @@ checkHandler._check.put = (requestedProperties, callback) => {
     });
   }
 };
-checkHandler._check.delete = (requestedProperties, callback) => {};
+checkHandler._check.delete = (requestedProperties, callback) => {
+  const body = requestedProperties.body;
+  const id =
+    typeof body.id === 'string' && body.id.trim().length > 0
+      ? body.id.trim()
+      : false;
+
+  if (id) {
+    data.read('checks', id, (err1, checkData) => {
+      if (!err1 && checkData) {
+        const parsedCheckData = parseJson(checkData);
+        let token =
+          typeof requestedProperties.headers?.token === 'string'
+            ? requestedProperties.headers.token
+            : false;
+
+        if (token) {
+          verifyToken(token, parsedCheckData.userPhone, (isTokenValid) => {
+            if (isTokenValid) {
+              data.delete('checks', id, (err2) => {
+                if (!err2) {
+                  data.read(
+                    'users',
+                    parsedCheckData.userPhone,
+                    (err3, userData) => {
+                      if (!err3) {
+                        const parsedUserData = parseJson(userData);
+                        const userChecks = parsedUserData.checks;
+                        const selectedCheckIndx = userChecks.indexOf(id);
+                        userChecks.splice(selectedCheckIndx, 1);
+
+                        parsedUserData.checks = userChecks;
+                        data.update(
+                          'users',
+                          parsedCheckData.userPhone,
+                          parsedUserData,
+                          (err4) => {
+                            if (!err4) {
+                              callback(200, {
+                                message: 'Successfully deleted'
+                              });
+                            } else {
+                              callback(500, {
+                                error:
+                                  'there is a serverside error while deleting user checks id'
+                              });
+                            }
+                          }
+                        );
+                      } else {
+                        callback(500, {
+                          error:
+                            'There is a server side error while deleting checks id from user data'
+                        });
+                      }
+                    }
+                  );
+                } else {
+                  callback(500, {
+                    error: 'There is a server side error'
+                  });
+                }
+              });
+            } else {
+              callback(401, {
+                error: 'Token is not correct'
+              });
+            }
+          });
+        } else {
+          callback(401, {
+            error: 'Must provide token'
+          });
+        }
+      } else {
+        callback(400, {
+          error: 'Check id is not correct'
+        });
+      }
+    });
+  } else {
+    callback(400, {
+      error: 'Must provide check id'
+    });
+  }
+};
 
 module.exports = checkHandler;
