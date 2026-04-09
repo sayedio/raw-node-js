@@ -344,7 +344,3 @@ Verify Twilio credentials in `helpers/environment.js` and ensure `fromNumber` is
 - Default port is `3000` for both staging and production in current config.
 - Max checks per user is controlled by `maxChecks` in environment settings.
 - This project is intentionally minimal and built with raw Node.js patterns for learning and control.
-
-## License
-
-ISC
