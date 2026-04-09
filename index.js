@@ -1,21 +1,15 @@
-const http = require('http');
-const { handleReqRes } = require('./helpers/handleReqRes');
-const environment = require('./helpers/environment');
-const lib = require('./lib/data');
+const server = require('./lib/server');
+const worker = require('./lib/worker');
 
 app = {};
-
 // lib.delete('test', 'test', (update) => {
 //   console.log(update);
 // });
 
-app.createServer = () => {
-  const server = http.createServer(app.handleReqRes);
-  server.listen(environment.port, () => {
-    // console.log(process.env.NODE_ENV);
-    console.log(`listening on port ${environment.port}`);
-  });
+app.init = () => {
+  server.init();
+  worker.init();
 };
-app.handleReqRes = handleReqRes;
 
-app.createServer();
+app.init();
+module.exports = app;
